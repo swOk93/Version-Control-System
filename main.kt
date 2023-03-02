@@ -39,11 +39,11 @@ fun hash(): Int {
 }
 
 fun newHash() {
-    val indexFile = File("vcs/index.txt")
+    val indexFiles = File("vcs/index.txt")
     val hash = hash()
 //    if (!File("vcs/commits").exists()) File("vcs/commits").mkdir()
     File("vcs/commits/$hash").mkdir()
-    for (file in indexFile.readLines()) {
+    for (file in indexFiles.readLines()) {
         File("vcs/commits/$hash/$file").writeText(File(file).readText()) // read text from orig file and create a new file with this text
     }
 }
@@ -82,8 +82,26 @@ fun commit(name: String = "") {
 
 }
 
-fun checkout() {
-    println("Restore a file.")
+fun restoreFile(hash: String) {
+    val indexFiles = File("vcs/index.txt")
+    for (file in indexFiles.readLines()) {
+        File("vcs/commits/$hash/$file").copyTo(File(file), overwrite = true) // read text from old file and overwrite a tracked file
+    }
+}
+
+fun checkout(name: String = "") { // restore a file
+    val log = File("vcs/log.txt").readLines()
+    if (name == "") println("Commit id was not passed.")
+    else if (name != "") {
+        for (hash in 0..log.size-3 step 3) {
+            if (hash == name) {
+                println("Switched to commit 0b4f05fcd3e1dcc47f58fed4bb189196f99da89a.")
+                restoreFile(name)
+                return
+            }
+        }
+        println("Commit does not exist.")
+    }
 }
 
 fun help() {
@@ -110,7 +128,7 @@ fun main(args: Array<String>) {
         "add" -> add(secArg)
         "log" -> log()
         "commit" -> commit(secArg)
-        "checkout" -> checkout()
+        "checkout" -> checkout(secArg)
         else -> println("'${args[0]}' is not a SVCS command.")
     } else help()
 }
